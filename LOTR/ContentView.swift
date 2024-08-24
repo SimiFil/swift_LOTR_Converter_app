@@ -21,12 +21,18 @@ struct ContentView: View {
     @State var leftCurrency: Currency = .silverPiece
     @State var rightCurrency: Currency = .goldPiece
     
+    let defaults = UserDefaults.standard // creating new instance of userDefaults
+    
     var body: some View {
         ZStack {
             // background image
             Image(.background)
                 .resizable()
                 .ignoresSafeArea()
+                .onTapGesture {
+                    leftTyping = false
+                    rightTyping = false
+                }
                 
             VStack {
                 // logo
@@ -36,7 +42,7 @@ struct ContentView: View {
                     .frame(height: 200) // thanks to scaled to fit it looks normal...
                 
                 // some txt
-                Text("Currency Exchange")
+                Text("Currency Exchange ")
                     .font(.largeTitle)
                     .foregroundStyle(.white)
                 
@@ -57,7 +63,6 @@ struct ContentView: View {
                                 .font(.headline)
                                 .foregroundStyle(.white)
                         }
-                        .padding(.bottom, -5)
                         .onTapGesture {
                             showSelectCurrency.toggle()
                         }
@@ -93,7 +98,6 @@ struct ContentView: View {
                                 .scaledToFit()
                                 .frame(height: 33)
                         }
-                        .padding(.bottom, -5)
                         .onTapGesture {
                             showSelectCurrency.toggle()
                         }
@@ -132,8 +136,19 @@ struct ContentView: View {
             
 //            .border(.blue)
         }
+        // does action before the view loads
         .task {
             try? Tips.configure() // try but optional, so it tries, but if not working - it gives up
+        }
+        .onAppear {
+            // Load saved currencies
+            let savedLeftCurrency = defaults.string(forKey: "leftCurrency")
+            let savedRightCurrency = defaults.string(forKey: "rightCurrency")
+            
+            if (savedLeftCurrency != nil || savedRightCurrency != nil) {
+                leftCurrency = Currency.from(identifier: savedLeftCurrency ?? "Silver Piece")
+                rightCurrency = Currency.from(identifier: savedRightCurrency ?? "Gold Piece")
+            }
         }
         .onChange(of: leftAmount) {
             if (leftTyping) {
@@ -147,9 +162,11 @@ struct ContentView: View {
         }
         .onChange(of: leftCurrency) {
             leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
+            defaults.set(leftCurrency.name, forKey: "leftCurrency")
         }
         .onChange(of: rightCurrency) {
             rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
+            defaults.set(rightCurrency.name, forKey: "rightCurrency")
         }
         .sheet(isPresented: $showExchangeInfo) {
             ExchangeInfo()

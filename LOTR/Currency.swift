@@ -63,4 +63,16 @@ enum Currency: Double, CaseIterable, Identifiable {
         
         return String(format: "%.2f", convertedAmount)
     }
+    
+    static func from(identifier: String) -> Currency {
+        switch identifier {
+        case "Copper Penny": return .copperPenny
+        case "Silver Penny": return .silverPenny
+        case "Silver Piece": return .silverPiece
+        case "Gold Penny": return .goldPenny
+        case "Gold Piece": return .goldPiece
+        default:
+            return .silverPenny
+        }
+    }
 }
